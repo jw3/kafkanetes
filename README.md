@@ -16,59 +16,59 @@ Matthew Farrellee, 15 Feb 2017 (updated: new oc commands; skip persistent volume
 
 1. Clone repository
  ```bash
-$ git clone https://github.com/mattf/kafkanetes.git
-$ cd kafkanetes
+git clone https://github.com/mattf/kafkanetes.git
+cd kafkanetes
 ```
 
 1. Build the Kafkanetes image, containing CentOS, Java, Kafka and its distribution of Zookeeper
    ```bash
-$ oc new-build .
-$ oc logs -f bc/kafkanetes-1
+oc new-build .
+oc logs -f bc/kafkanetes-1
 ```
 
 1. Deploy 1-pod Zookeeper
    ```bash
-$ oc new-app kafkanetes-deploy-zk-1.yaml
-$ oc rollout latest dc/kafkanetes-zk
+oc new-app kafkanetes-deploy-zk-1.yaml
+oc rollout latest dc/kafkanetes-zk
 ```
 
 1. Deploy 1-pod Kafka
    ```bash
-$ oc new-app kafkanetes-deploy-kafka-1.yaml
-$ oc rollout latest dc/kafkanetes-kafka
+oc new-app kafkanetes-deploy-kafka-1.yaml
+oc rollout latest dc/kafkanetes-kafka
 ```
 
 ## Follow the [Apache Kafka Documentation Quick Start](https://kafka.apache.org/documentation.html#quickstart)
 
 1. Deploy a debugging container and connect to it
    ```bash
-$ oc new-app kafkanetes-debug.yaml
-$ oc rollout latest dc/kafkanetes-debug
-$ oc rsh $(oc get pods -l deploymentconfig=kafkanetes-debug --template '{{range .items}}{{.metadata.name}}{{end}}')
+oc new-app kafkanetes-debug.yaml
+oc rollout latest dc/kafkanetes-debug
+oc rsh $(oc get pods -l deploymentconfig=kafkanetes-debug --template '{{range .items}}{{.metadata.name}}{{end}}')
 ```
 
 1. Create a topic
    ```bash
-bash-4.2$ bin/kafka-topics.sh --create --zookeeper kafkanetes-zk:2181 --replication-factor 1 --partitions 1 --topic test
+bin/kafka-topics.sh --create --zookeeper kafkanetes-zk:2181 --replication-factor 1 --partitions 1 --topic test
 ```
 
 1. List topics
    ```bash
-bash-4.2$ bin/kafka-topics.sh --list --zookeeper kafkanetes-zk:2181
+bin/kafka-topics.sh --list --zookeeper kafkanetes-zk:2181
 ```
 
 1. Send some messages
    ```bash
-bash-4.2$ bin/kafka-console-producer.sh --broker-list kafkanetes-kafka:9092 --topic test 
+bin/kafka-console-producer.sh --broker-list kafkanetes-kafka:9092 --topic test <<EOF
 foo
 bar 
 baz
-^D
+EOF
 ```
 
 1. Receive some messages
    ```bash
-bash-4.2$ bin/kafka-console-consumer.sh --zookeeper kafkanetes-zk:2181 --topic test --from-beginning
+bin/kafka-console-consumer.sh --zookeeper kafkanetes-zk:2181 --topic test --from-beginning
 ```
 
 ## Notes

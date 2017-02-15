@@ -22,7 +22,7 @@ oc create -f https://raw.githubusercontent.com/mattf/kafkanetes/master/resources
 1. Build the Kafkanetes image, containing CentOS, Java, Kafka and its distribution of Zookeeper
    ```bash
 oc new-build https://github.com/mattf/kafkanetes.git
-oc logs -f bc/kafkanetes-1
+oc logs -f bc/kafkanetes
 ```
 
 1. Deploy 1-pod Zookeeper

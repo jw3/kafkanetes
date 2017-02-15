@@ -16,25 +16,24 @@ Matthew Farrellee, 15 Feb 2017 (updated: new oc commands; skip persistent volume
 
 1. Clone repository
  ```bash
-git clone https://github.com/mattf/kafkanetes.git
-cd kafkanetes
+oc create -f https://raw.githubusercontent.com/mattf/kafkanetes/master/resources.yaml
 ```
 
 1. Build the Kafkanetes image, containing CentOS, Java, Kafka and its distribution of Zookeeper
    ```bash
-oc new-build .
+oc new-build https://github.com/mattf/kafkanetes.git
 oc logs -f bc/kafkanetes-1
 ```
 
 1. Deploy 1-pod Zookeeper
    ```bash
-oc new-app kafkanetes-deploy-zk-1.yaml
+oc new-app kafkanetes-deploy-zk-1
 oc rollout latest dc/kafkanetes-zk
 ```
 
 1. Deploy 1-pod Kafka
    ```bash
-oc new-app kafkanetes-deploy-kafka-1.yaml
+oc new-app kafkanetes-deploy-kafka-1
 oc rollout latest dc/kafkanetes-kafka
 ```
 
@@ -42,7 +41,7 @@ oc rollout latest dc/kafkanetes-kafka
 
 1. Deploy a debugging container and connect to it
    ```bash
-oc new-app kafkanetes-debug.yaml
+oc new-app kafkanetes-debug
 oc rollout latest dc/kafkanetes-debug
 oc rsh $(oc get pods -l deploymentconfig=kafkanetes-debug --template '{{range .items}}{{.metadata.name}}{{end}}')
 ```

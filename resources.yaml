@@ -1,0 +1,666 @@
+kind: List
+apiVersion: v1
+metadata: {}
+
+items:
+
+- apiVersion: v1
+  kind: Template
+  metadata:
+    name: kafkanetes-debug
+    annotations:
+      description: Kafkanetes debugging pod
+      tags: messaging,kafka,zookeeper
+  
+  parameters:
+  - name: OBJECT_NAME_PREFIX
+    description: Name prefix for each object created
+    required: true
+    value: kafkanetes-debug
+  - name: IMAGESTREAM
+    description: Kafkanetes imagestream name
+    required: true
+    value: kafkanetes
+  
+  objects:
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}
+    spec:
+      replicas: 1
+      selector:
+        deploymentconfig: ${OBJECT_NAME_PREFIX}
+      template:
+        metadata:
+          labels:
+            deploymentconfig: ${OBJECT_NAME_PREFIX}
+        spec:
+          containers:
+          - name: kafkanetes
+            image: ${IMAGESTREAM}
+            command:
+            - python
+            args:
+            - -c
+            - import signal; signal.pause()
+      triggers:
+      - type: ConfigChange
+      - type: ImageChange
+        imageChangeParams:
+          automatic: false
+          containerNames:
+          - kafkanetes
+          from:
+            kind: ImageStream
+            name: ${IMAGESTREAM}
+
+- apiVersion: v1
+  kind: Template
+  metadata:
+    name: kafkanetes-deploy-kafka-1
+    annotations:
+      description: 1-pod Kafka
+      tags: messaging,kafka
+  
+  parameters:
+  #- name: VOLUME_CAPACITY
+  #  description: Persistent volume capacity per pod, e.g. 512Mi, 2Gi
+  #  required: true
+  #  value: 512Mi
+  - name: OBJECT_NAME_PREFIX
+    description: Name prefix for each object created
+    required: true
+    value: kafkanetes-kafka
+  - name: ZOOKEEPER_SERVICE
+    description: DNS name of ZooKeeper service
+    required: true
+    value: kafkanetes-zk
+  - name: IMAGESTREAM
+    description: Kafkanetes imagestream name
+    required: true
+    value: kafkanetes
+  
+  objects:
+  #- apiVersion: v1
+  #  kind: PersistentVolumeClaim
+  #  metadata:
+  #    name: ${OBJECT_NAME_PREFIX}
+  #  spec:
+  #    accessModes:
+  #    - ReadWriteOnce
+  #    resources:
+  #      requests:
+  #        storage: ${VOLUME_CAPACITY}
+  
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}
+    spec:
+      replicas: 1
+      selector:
+        deploymentconfig: ${OBJECT_NAME_PREFIX}
+      template:
+        metadata:
+          labels:
+            deploymentconfig: ${OBJECT_NAME_PREFIX}
+        spec:
+          containers:
+          - name: kafkanetes
+            image: ${IMAGESTREAM}
+            command:
+            - bin/kafka-server-start.sh
+            args:
+            - config/server.properties
+            - --override
+            - zookeeper.connect=${ZOOKEEPER_SERVICE}
+            - --override
+            - advertised.host.name=${OBJECT_NAME_PREFIX}
+            volumeMounts:
+            - mountPath: /tmp/kafka-logs
+              name: kafka-logs
+            ports:
+            - containerPort: 9092
+          volumes:
+          - name: kafka-logs
+            emptyDir: {}
+  #          persistentVolumeClaim:
+  #            claimName: ${OBJECT_NAME_PREFIX}
+      triggers:
+      - type: ConfigChange
+      - type: ImageChange
+        imageChangeParams:
+          automatic: false
+          containerNames:
+          - kafkanetes
+          from:
+            kind: ImageStream
+            name: ${IMAGESTREAM}
+  
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}
+    spec:
+      ports:
+      - port: 9092
+      selector:
+        deploymentconfig: ${OBJECT_NAME_PREFIX}
+
+- apiVersion: v1
+  kind: Template
+  metadata:
+    name: kafkanetes-deploy-kafka-2
+    annotations:
+      description: 2-pod Kafka
+      tags: messaging,kafka
+  
+  parameters:
+  #- name: VOLUME_CAPACITY
+  #  description: Persistent volume capacity per pod, e.g. 512Mi, 2Gi
+  #  required: true
+  #  value: 512Mi
+  - name: OBJECT_NAME_PREFIX
+    description: Name prefix for each object created
+    required: true
+    value: kafkanetes-kafka
+  - name: ZOOKEEPER_SERVICE
+    description: DNS name of ZooKeeper service
+    required: true
+    value: kafkanetes-zk
+  - name: IMAGESTREAM
+    description: Kafkanetes imagestream name
+    required: true
+    value: kafkanetes
+  
+  objects:
+  #- apiVersion: v1
+  #  kind: PersistentVolumeClaim
+  #  metadata:
+  #    name: ${OBJECT_NAME_PREFIX}-1
+  #  spec:
+  #    accessModes:
+  #    - ReadWriteOnce
+  #    resources:
+  #      requests:
+  #        storage: ${VOLUME_CAPACITY}
+  
+  #- apiVersion: v1
+  #  kind: PersistentVolumeClaim
+  #  metadata:
+  #    name: ${OBJECT_NAME_PREFIX}-2
+  #  spec:
+  #    accessModes:
+  #    - ReadWriteOnce
+  #    resources:
+  #      requests:
+  #        storage: ${VOLUME_CAPACITY}
+  
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}-1
+    spec:
+      replicas: 1
+      selector:
+        deploymentconfig: ${OBJECT_NAME_PREFIX}-1
+      template:
+        metadata:
+          labels:
+            app: ${OBJECT_NAME_PREFIX}
+            deploymentconfig: ${OBJECT_NAME_PREFIX}-1
+        spec:
+          containers:
+          - name: kafkanetes
+            image: ${IMAGESTREAM}
+            command:
+            - bin/kafka-server-start.sh
+            args:
+            - config/server.properties
+            - --override
+            - zookeeper.connect=${ZOOKEEPER_SERVICE}
+            - --override
+            - advertised.host.name=${OBJECT_NAME_PREFIX}-1
+            - --override
+            - broker.id=0
+            volumeMounts:
+            - mountPath: /tmp/kafka-logs
+              name: kafka-logs
+            ports:
+            - containerPort: 9092
+          volumes:
+          - name: kafka-logs
+            emptyDir: {}
+  #          persistentVolumeClaim:
+  #            claimName: ${OBJECT_NAME_PREFIX}-1
+      triggers:
+      - type: ConfigChange
+      - type: ImageChange
+        imageChangeParams:
+          automatic: false
+          containerNames:
+          - kafkanetes
+          from:
+            kind: ImageStream
+            name: ${IMAGESTREAM}
+  
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}-2
+    spec:
+      replicas: 1
+      selector:
+        deploymentconfig: ${OBJECT_NAME_PREFIX}-2
+      template:
+        metadata:
+          labels:
+            app: ${OBJECT_NAME_PREFIX}
+            deploymentconfig: ${OBJECT_NAME_PREFIX}-2
+        spec:
+          containers:
+          - name: kafkanetes
+            image: ${IMAGESTREAM}
+            command:
+            - bin/kafka-server-start.sh
+            args:
+            - config/server.properties
+            - --override
+            - zookeeper.connect=${ZOOKEEPER_SERVICE}
+            - --override
+            - advertised.host.name=${OBJECT_NAME_PREFIX}-2
+            - --override
+            - broker.id=1
+            volumeMounts:
+            - mountPath: /tmp/kafka-logs
+              name: kafka-logs
+            ports:
+            - containerPort: 9092
+          volumes:
+          - name: kafka-logs
+            emptyDir: {}
+  #          persistentVolumeClaim:
+  #            claimName: ${OBJECT_NAME_PREFIX}-2
+      triggers:
+      - type: ConfigChange
+      - type: ImageChange
+        imageChangeParams:
+          automatic: false
+          containerNames:
+          - kafkanetes
+          from:
+            kind: ImageStream
+            name: ${IMAGESTREAM}
+  
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}-1
+    spec:
+      ports:
+      - port: 9092
+      selector:
+        deploymentconfig: ${OBJECT_NAME_PREFIX}-1
+  
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}-2
+    spec:
+      ports:
+      - port: 9092
+      selector:
+        deploymentconfig: ${OBJECT_NAME_PREFIX}-2
+  
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}
+    spec:
+      ports:
+      - port: 9092
+      selector:
+        app: ${OBJECT_NAME_PREFIX}
+
+- apiVersion: v1
+  kind: Template
+  metadata:
+    name: kafkanetes-deploy-zk-1
+    annotations:
+      description: 1-pod ZooKeeper
+      tags: messaging,zookeeper
+  
+  parameters:
+  #- name: VOLUME_CAPACITY
+  #  description: Persistent volume capacity per pod, e.g. 512Mi, 2Gi
+  #  required: true
+  #  value: 512Mi
+  - name: OBJECT_NAME_PREFIX
+    description: Name prefix for each object created
+    required: true
+    value: kafkanetes-zk
+  - name: IMAGESTREAM
+    description: Kafkanetes imagestream name
+    required: true
+    value: kafkanetes
+  
+  objects:
+  #- apiVersion: v1
+  #  kind: PersistentVolumeClaim
+  #  metadata:
+  #    name: ${OBJECT_NAME_PREFIX}
+  #  spec:
+  #    accessModes:
+  #    - ReadWriteOnce
+  #    resources:
+  #      requests:
+  #        storage: ${VOLUME_CAPACITY}
+  
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}
+    spec:
+      replicas: 1
+      selector:
+        deploymentconfig: ${OBJECT_NAME_PREFIX}
+      template:
+        metadata:
+          labels:
+            deploymentconfig: ${OBJECT_NAME_PREFIX}
+        spec:
+          containers:
+          - name: kafkanetes
+            image: ${IMAGESTREAM}
+            command:
+            - bin/zookeeper-server-start.sh
+            args:
+            - config/zookeeper.properties
+            volumeMounts:
+            - mountPath: /tmp/zookeeper
+              name: zookeeper
+            ports:
+            - containerPort: 2181
+          volumes:
+          - name: zookeeper
+            emptyDir: {}
+  #          persistentVolumeClaim:
+  #            claimName: ${OBJECT_NAME_PREFIX}
+      triggers:
+      - type: ConfigChange
+      - type: ImageChange
+        imageChangeParams:
+          automatic: false
+          containerNames:
+          - kafkanetes
+          from:
+            kind: ImageStream
+            name: ${IMAGESTREAM}
+  
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}
+    spec:
+      ports:
+      - port: 2181
+      selector:
+        deploymentconfig: ${OBJECT_NAME_PREFIX}
+
+- apiVersion: v1
+  kind: Template
+  metadata:
+    name: kafkanetes-deploy-zk-3
+    annotations:
+      description: 3-pod ZooKeeper
+      tags: messaging,zookeeper
+  
+  parameters:
+  #- name: VOLUME_CAPACITY
+  #  description: Persistent volume capacity per pod, e.g. 512Mi, 2Gi
+  #  required: true
+  #  value: 512Mi
+  - name: OBJECT_NAME_PREFIX
+    description: Name prefix for each object created
+    required: true
+    value: kafkanetes-zk
+  - name: IMAGESTREAM
+    description: Kafkanetes imagestream name
+    required: true
+    value: kafkanetes
+  
+  objects:
+  #- apiVersion: v1
+  #  kind: PersistentVolumeClaim
+  #  metadata:
+  #    name: ${OBJECT_NAME_PREFIX}-1
+  #  spec:
+  #    accessModes:
+  #    - ReadWriteOnce
+  #    resources:
+  #      requests:
+  #        storage: ${VOLUME_CAPACITY}
+  
+  #- apiVersion: v1
+  #  kind: PersistentVolumeClaim
+  #  metadata:
+  #    name: ${OBJECT_NAME_PREFIX}-2
+  #  spec:
+  #    accessModes:
+  #    - ReadWriteOnce
+  #    resources:
+  #      requests:
+  #        storage: ${VOLUME_CAPACITY}
+  
+  #- apiVersion: v1
+  #  kind: PersistentVolumeClaim
+  #  metadata:
+  #    name: ${OBJECT_NAME_PREFIX}-3
+  #  spec:
+  #    accessModes:
+  #    - ReadWriteOnce
+  #    resources:
+  #      requests:
+  #        storage: ${VOLUME_CAPACITY}
+  
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}-1
+    spec:
+      replicas: 1
+      selector:
+        deploymentconfig: ${OBJECT_NAME_PREFIX}-1
+      template:
+        metadata:
+          labels:
+            app: ${OBJECT_NAME_PREFIX}
+            deploymentconfig: ${OBJECT_NAME_PREFIX}-1
+        spec:
+          containers:
+          - name: kafkanetes
+            image: ${IMAGESTREAM}
+            command:
+            - bin/zookeeper-server-start-multiple.sh
+            args:
+            - config/zookeeper.properties
+            - ${OBJECT_NAME_PREFIX}
+            - "1"
+            - "3"
+            volumeMounts:
+            - mountPath: /tmp/zookeeper
+              name: zookeeper
+            ports:
+            - containerPort: 2181
+            - containerPort: 2888
+            - containerPort: 3888
+          volumes:
+          - name: zookeeper
+            emptyDir: {}
+  #          persistentVolumeClaim:
+  #            claimName: ${OBJECT_NAME_PREFIX}-1
+      triggers:
+      - type: ConfigChange
+      - type: ImageChange
+        imageChangeParams:
+          automatic: false
+          containerNames:
+          - kafkanetes
+          from:
+            kind: ImageStream
+            name: ${IMAGESTREAM}
+  
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}-2
+    spec:
+      replicas: 1
+      selector:
+        deploymentconfig: ${OBJECT_NAME_PREFIX}-2
+      template:
+        metadata:
+          labels:
+            app: ${OBJECT_NAME_PREFIX}
+            deploymentconfig: ${OBJECT_NAME_PREFIX}-2
+        spec:
+          containers:
+          - name: kafkanetes
+            image: ${IMAGESTREAM}
+            command:
+            - bin/zookeeper-server-start-multiple.sh
+            args:
+            - config/zookeeper.properties
+            - ${OBJECT_NAME_PREFIX}
+            - "2"
+            - "3"
+            volumeMounts:
+            - mountPath: /tmp/zookeeper
+              name: zookeeper
+            ports:
+            - containerPort: 2181
+            - containerPort: 2888
+            - containerPort: 3888
+          volumes:
+          - name: zookeeper
+            emptyDir: {}
+  #          persistentVolumeClaim:
+  #            claimName: ${OBJECT_NAME_PREFIX}-2
+      triggers:
+      - type: ConfigChange
+      - type: ImageChange
+        imageChangeParams:
+          automatic: false
+          containerNames:
+          - kafkanetes
+          from:
+            kind: ImageStream
+            name: ${IMAGESTREAM}
+  
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}-3
+    spec:
+      replicas: 1
+      selector:
+        deploymentconfig: ${OBJECT_NAME_PREFIX}-3
+      template:
+        metadata:
+          labels:
+            app: ${OBJECT_NAME_PREFIX}
+            deploymentconfig: ${OBJECT_NAME_PREFIX}-3
+        spec:
+          containers:
+          - name: kafkanetes
+            image: ${IMAGESTREAM}
+            command:
+            - bin/zookeeper-server-start-multiple.sh
+            args:
+            - config/zookeeper.properties
+            - ${OBJECT_NAME_PREFIX}
+            - "3"
+            - "3"
+            volumeMounts:
+            - mountPath: /tmp/zookeeper
+              name: zookeeper
+            ports:
+            - containerPort: 2181
+            - containerPort: 2888
+            - containerPort: 3888
+          volumes:
+          - name: zookeeper
+            emptyDir: {}
+  #          persistentVolumeClaim:
+  #            claimName: ${OBJECT_NAME_PREFIX}-3
+      triggers:
+      - type: ConfigChange
+      - type: ImageChange
+        imageChangeParams:
+          automatic: false
+          containerNames:
+          - kafkanetes
+          from:
+            kind: ImageStream
+            name: ${IMAGESTREAM}
+  
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}-1
+    spec:
+      ports:
+      - name: 2181-tcp
+        port: 2181
+      - name: 2888-tcp
+        port: 2888
+      - name: 3888-tcp
+        port: 3888
+      selector:
+        deploymentconfig: ${OBJECT_NAME_PREFIX}-1
+  
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}-2
+    spec:
+      ports:
+      - name: 2181-tcp
+        port: 2181
+      - name: 2888-tcp
+        port: 2888
+      - name: 3888-tcp
+        port: 3888
+      selector:
+        deploymentconfig: ${OBJECT_NAME_PREFIX}-2
+  
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}-3
+    spec:
+      ports:
+      - name: 2181-tcp
+        port: 2181
+      - name: 2888-tcp
+        port: 2888
+      - name: 3888-tcp
+        port: 3888
+      selector:
+        deploymentconfig: ${OBJECT_NAME_PREFIX}-3
+  
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: ${OBJECT_NAME_PREFIX}
+    spec:
+      ports:
+      - name: 2181-tcp
+        port: 2181
+      - name: 2888-tcp
+        port: 2888
+      - name: 3888-tcp
+        port: 3888
+      selector:
+        app: ${OBJECT_NAME_PREFIX}

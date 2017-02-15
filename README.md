@@ -10,6 +10,7 @@ Proof of concept; builds following architectures:
 * 3 ZooKeeper pods <-> 2 Kafka pods
 
 Jim Minter, 24/03/2016
+
 Matthew Farrellee, 15 Feb 2017 (updated: new oc commands; skip persistent volumes; skip template load)
 
 ## Quick start

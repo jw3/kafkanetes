@@ -10,45 +10,40 @@ Proof of concept; builds following architectures:
 * 3 ZooKeeper pods <-> 2 Kafka pods
 
 Jim Minter, 24/03/2016
+Matthew Farrellee, 15 Feb 2017 (updated: new oc commands; skip persistent volumes; skip template load)
 
 ## Quick start
 
-Prerequirement: ensure you have persistent storage available in OpenShift.  If not, read [Configuring Persistent Storage](https://docs.openshift.com/enterprise/latest/install_config/persistent_storage/index.html).
-
 1. Clone repository
  ```bash
-$ git clone https://github.com/jim-minter/kafkanetes.git
+$ git clone https://github.com/mattf/kafkanetes.git
+$ cd kafkanetes
 ```
 
-1. (Optionally) import templates into OpenShift (requires elevated privileges)
-
-   If you follow this step, as an alternative you can use the UI for all subsequent steps.  If you omit this step, in all subsequent steps substitute `$ oc process -f kafkanetes/foo.yaml | oc create -f -` for `$ oc new-app foo`.
-
+1. Build the Kafkanetes image, containing CentOS, Java, Kafka and its distribution of Zookeeper
    ```bash
-$ for i in kafkanetes/*.yaml; do sudo oc create -f $i -n openshift; done
+$ oc new-build .
+$ oc logs -f bc/kafkanetes-1
 ```
 
-1. Build the Kafkanetes image, containing RHEL, Java, Kafka and its distribution of Zookeeper
+1. Deploy 1-pod Zookeeper
    ```bash
-$ oc new-app kafkanetes-build
-$ oc logs --follow build/kafkanetes-1
+$ oc new-app kafkanetes-deploy-zk-1.yaml
+$ oc rollout latest dc/kafkanetes-zk
 ```
 
-1. Deploy 3-pod Zookeeper
+1. Deploy 1-pod Kafka
    ```bash
-$ oc new-app kafkanetes-deploy-zk-3
-```
-
-1. Deploy 2-pod Kafka
-   ```bash
-$ oc new-app kafkanetes-deploy-kafka-2
+$ oc new-app kafkanetes-deploy-kafka-1.yaml
+$ oc rollout latest dc/kafkanetes-kafka
 ```
 
 ## Follow the [Apache Kafka Documentation Quick Start](https://kafka.apache.org/documentation.html#quickstart)
 
 1. Deploy a debugging container and connect to it
    ```bash
-$ oc new-app kafkanetes-debug
+$ oc new-app kafkanetes-debug.yaml
+$ oc rollout latest dc/kafkanetes-debug
 $ oc rsh $(oc get pods -l deploymentconfig=kafkanetes-debug --template '{{range .items}}{{.metadata.name}}{{end}}')
 ```
 

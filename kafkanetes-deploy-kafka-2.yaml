@@ -7,10 +7,10 @@ metadata:
     tags: messaging,kafka
 
 parameters:
-- name: VOLUME_CAPACITY
-  description: Persistent volume capacity per pod, e.g. 512Mi, 2Gi
-  required: true
-  value: 512Mi
+#- name: VOLUME_CAPACITY
+#  description: Persistent volume capacity per pod, e.g. 512Mi, 2Gi
+#  required: true
+#  value: 512Mi
 - name: OBJECT_NAME_PREFIX
   description: Name prefix for each object created
   required: true
@@ -25,27 +25,27 @@ parameters:
   value: kafkanetes
 
 objects:
-- apiVersion: v1
-  kind: PersistentVolumeClaim
-  metadata:
-    name: ${OBJECT_NAME_PREFIX}-1
-  spec:
-    accessModes:
-    - ReadWriteOnce
-    resources:
-      requests:
-        storage: ${VOLUME_CAPACITY}
+#- apiVersion: v1
+#  kind: PersistentVolumeClaim
+#  metadata:
+#    name: ${OBJECT_NAME_PREFIX}-1
+#  spec:
+#    accessModes:
+#    - ReadWriteOnce
+#    resources:
+#      requests:
+#        storage: ${VOLUME_CAPACITY}
 
-- apiVersion: v1
-  kind: PersistentVolumeClaim
-  metadata:
-    name: ${OBJECT_NAME_PREFIX}-2
-  spec:
-    accessModes:
-    - ReadWriteOnce
-    resources:
-      requests:
-        storage: ${VOLUME_CAPACITY}
+#- apiVersion: v1
+#  kind: PersistentVolumeClaim
+#  metadata:
+#    name: ${OBJECT_NAME_PREFIX}-2
+#  spec:
+#    accessModes:
+#    - ReadWriteOnce
+#    resources:
+#      requests:
+#        storage: ${VOLUME_CAPACITY}
 
 - apiVersion: v1
   kind: DeploymentConfig
@@ -81,8 +81,9 @@ objects:
           - containerPort: 9092
         volumes:
         - name: kafka-logs
-          persistentVolumeClaim:
-            claimName: ${OBJECT_NAME_PREFIX}-1
+          emptyDir: {}
+#          persistentVolumeClaim:
+#            claimName: ${OBJECT_NAME_PREFIX}-1
     triggers:
     - type: ConfigChange
     - type: ImageChange
@@ -128,8 +129,9 @@ objects:
           - containerPort: 9092
         volumes:
         - name: kafka-logs
-          persistentVolumeClaim:
-            claimName: ${OBJECT_NAME_PREFIX}-2
+          emptyDir: {}
+#          persistentVolumeClaim:
+#            claimName: ${OBJECT_NAME_PREFIX}-2
     triggers:
     - type: ConfigChange
     - type: ImageChange

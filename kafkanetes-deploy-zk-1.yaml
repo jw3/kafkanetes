@@ -7,10 +7,10 @@ metadata:
     tags: messaging,zookeeper
 
 parameters:
-- name: VOLUME_CAPACITY
-  description: Persistent volume capacity per pod, e.g. 512Mi, 2Gi
-  required: true
-  value: 512Mi
+#- name: VOLUME_CAPACITY
+#  description: Persistent volume capacity per pod, e.g. 512Mi, 2Gi
+#  required: true
+#  value: 512Mi
 - name: OBJECT_NAME_PREFIX
   description: Name prefix for each object created
   required: true
@@ -21,16 +21,16 @@ parameters:
   value: kafkanetes
 
 objects:
-- apiVersion: v1
-  kind: PersistentVolumeClaim
-  metadata:
-    name: ${OBJECT_NAME_PREFIX}
-  spec:
-    accessModes:
-    - ReadWriteOnce
-    resources:
-      requests:
-        storage: ${VOLUME_CAPACITY}
+#- apiVersion: v1
+#  kind: PersistentVolumeClaim
+#  metadata:
+#    name: ${OBJECT_NAME_PREFIX}
+#  spec:
+#    accessModes:
+#    - ReadWriteOnce
+#    resources:
+#      requests:
+#        storage: ${VOLUME_CAPACITY}
 
 - apiVersion: v1
   kind: DeploymentConfig
@@ -59,8 +59,9 @@ objects:
           - containerPort: 2181
         volumes:
         - name: zookeeper
-          persistentVolumeClaim:
-            claimName: ${OBJECT_NAME_PREFIX}
+          emptyDir: {}
+#          persistentVolumeClaim:
+#            claimName: ${OBJECT_NAME_PREFIX}
     triggers:
     - type: ConfigChange
     - type: ImageChange

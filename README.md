@@ -29,13 +29,11 @@ oc logs -f bc/kafkanetes
 1. Deploy 1-pod Zookeeper
    ```bash
 oc new-app kafkanetes-deploy-zk-1
-oc rollout latest dc/kafkanetes-zk
 ```
 
 1. Deploy 1-pod Kafka
    ```bash
 oc new-app kafkanetes-deploy-kafka-1
-oc rollout latest dc/kafkanetes-kafka
 ```
 
 ## Follow the [Apache Kafka Documentation Quick Start](https://kafka.apache.org/documentation.html#quickstart)
@@ -43,7 +41,6 @@ oc rollout latest dc/kafkanetes-kafka
 1. Deploy a debugging container and connect to it
    ```bash
 oc new-app kafkanetes-debug
-oc rollout latest dc/kafkanetes-debug
 oc rsh $(oc get pods -l deploymentconfig=kafkanetes-debug --template '{{range .items}}{{.metadata.name}}{{end}}')
 ```
 

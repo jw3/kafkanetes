@@ -48,7 +48,7 @@ items:
       - type: ConfigChange
       - type: ImageChange
         imageChangeParams:
-          automatic: false
+          automatic: true
           containerNames:
           - kafkanetes
           from:
@@ -131,7 +131,7 @@ items:
       - type: ConfigChange
       - type: ImageChange
         imageChangeParams:
-          automatic: false
+          automatic: true
           containerNames:
           - kafkanetes
           from:
@@ -238,7 +238,7 @@ items:
       - type: ConfigChange
       - type: ImageChange
         imageChangeParams:
-          automatic: false
+          automatic: true
           containerNames:
           - kafkanetes
           from:
@@ -286,7 +286,7 @@ items:
       - type: ConfigChange
       - type: ImageChange
         imageChangeParams:
-          automatic: false
+          automatic: true
           containerNames:
           - kafkanetes
           from:
@@ -391,7 +391,7 @@ items:
       - type: ConfigChange
       - type: ImageChange
         imageChangeParams:
-          automatic: false
+          automatic: true
           containerNames:
           - kafkanetes
           from:
@@ -504,7 +504,7 @@ items:
       - type: ConfigChange
       - type: ImageChange
         imageChangeParams:
-          automatic: false
+          automatic: true
           containerNames:
           - kafkanetes
           from:
@@ -551,7 +551,7 @@ items:
       - type: ConfigChange
       - type: ImageChange
         imageChangeParams:
-          automatic: false
+          automatic: true
           containerNames:
           - kafkanetes
           from:
@@ -598,7 +598,7 @@ items:
       - type: ConfigChange
       - type: ImageChange
         imageChangeParams:
-          automatic: false
+          automatic: true
           containerNames:
           - kafkanetes
           from:

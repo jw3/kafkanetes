@@ -65,7 +65,7 @@ EOF
 
 1. Receive some messages
    ```bash
-bin/kafka-console-consumer.sh --zookeeper kafkanetes-zk:2181 --topic test --from-beginning
+bin/kafka-console-consumer.sh --bootstrap-server kafkanetes-kafka:9092 --topic test --from-beginning
 ```
 
 ## Notes
